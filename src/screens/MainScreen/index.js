@@ -5,6 +5,7 @@ import styles from './MainScreen.styles'
 import GlobalStyles from '../../styles/GlobalStyles';
 
 import TextButton from '../../components/TextButton'
+import BluetoothScan from '../../components/BuetoothScan'
 
 export default class MainScreen extends Component {
     state = {
@@ -46,6 +47,9 @@ export default class MainScreen extends Component {
                 >
                     Pressed {this.state.pressed} times
                 </Text>
+            </View>
+            <View style={container}>
+                < BluetoothScan />
             </View>
         </View>
     }
