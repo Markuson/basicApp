@@ -14,7 +14,8 @@ export default class BluetoothScan extends Component {
     this.manager = new BleManager()
     this.state = {
       info: 'STOPPED',
-      scanning: false
+      scanning: false,
+      state: 'unknown'
     }
   }
 
@@ -45,8 +46,10 @@ export default class BluetoothScan extends Component {
 
   handlePress = () => {
 
+    console.log('SCAN')
+
     if (this.state.scanning) {
-      this.setState({info: 'STOPPED', scanning: false})
+      this.setState({ info: 'STOPPED', scanning: false })
       this.manager.stopDeviceScan()
       console.log('stopped')
     } else {
@@ -54,7 +57,7 @@ export default class BluetoothScan extends Component {
         null, (error, device) => {
           this.setState({ info: "Scanning..." })
           if (device) {
-            console.log(device.name)
+            console.log(device)
           }
 
           if (error) {
@@ -62,18 +65,43 @@ export default class BluetoothScan extends Component {
             this.setState({ info: "ERROR!" })
             return
           }
-          this.setState({scanning: true})
+          this.setState({ scanning: true })
         });
     }
+  }
+
+  state = () => {
+    console.log('STATE')
+    const subscription = this.manager.onStateChange((state) => {
+      this.setState({state})
+      if (state === 'PoweredOn') {
+        this.setState({state})
+        subscription.remove();
+      }
+    }, true);
   }
 
   render() {
 
     const { buttonText, container, textLight } = styles
-    const { info, scanning } = this.state
+    const { info, state } = this.state
 
     return <View styles={container}>
       <TextButton
+        title={"STATE"}
+        buttonColor={buttonText.color}
+        buttonHeight={buttonText.height}
+        buttonWidth={buttonText.width}
+        buttonRadius={buttonText.radius}
+        buttonFontColor={buttonText.fontColor}
+        buttonFontFamily={buttonText.fontFamily}
+        buttonFontSize={buttonText.fontSize}
+        onPress={() => this.state()}
+      />
+
+      <Text styles={textLight}>{state}</Text>
+
+      {/* <TextButton
         title={"SCAN"}
         buttonColor={buttonText.color}
         buttonHeight={buttonText.height}
@@ -85,7 +113,7 @@ export default class BluetoothScan extends Component {
         onPress={() => this.handlePress()}
       />
 
-      <Text styles={textLight} textAlign={'center'}>{info}</Text>
+      <Text styles={textLight} textAlign={'center'}>{info}</Text> */}
     </View>
 
 
