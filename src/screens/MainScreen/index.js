@@ -1,28 +1,24 @@
-import React, { Component } from 'react'
-import { Alert, Text, View } from 'react-native'
+import React, { useContext } from 'react'
+import { Alert, Text, View, Button } from 'react-native'
+import { Context } from '../../components/Context'
 
 import styles from './MainScreen.styles'
 import GlobalStyles from '../../styles/GlobalStyles';
 
 import TextButton from '../../components/TextButton'
 
-export default class MainScreen extends Component {
-    state = {
-        pressed: 0
+export default function MainScreen() {
+
+    const { pressed, handlePress, setPressed } = useContext(Context)
+
+    const { buttonText, container, textLight } = styles
+
+    const onPress = () => {
+        handlePress()
     }
 
-    handlePress = () => {
-        const pressed = this.state.pressed + 1
-        this.setState({ pressed })
-        // Alert.alert('PRESSED')
-
-    }
-
-    render() {
-
-        const { buttonText, container, textBold, textLight } = styles
-
-        return <View
+    return (
+        <View
             style={GlobalStyles.appContainer}
             accessible={false}
         >
@@ -36,17 +32,19 @@ export default class MainScreen extends Component {
                     buttonFontColor={buttonText.fontColor}
                     buttonFontFamily={buttonText.fontFamily}
                     buttonFontSize={buttonText.fontSize}
-                    onPress={() => this.handlePress()}
+                    onPress={onPress}
                 />
+                <Button title={'press'} onPress={onPress} />
                 <Text
                     style={textLight}
                     accessible={true}
                     testID={'increase-count-text'}
                     accessibilityLabel={'increase-count-text'}
                 >
-                    Pressed {this.state.pressed} times
-                </Text>
+                    Pressed {pressed} times
+                    </Text>
             </View>
         </View>
-    }
+
+    )
 }

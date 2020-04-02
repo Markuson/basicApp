@@ -3,7 +3,7 @@ import { TouchableOpacity, Text, Vibration } from 'react-native';
 
 import styles from './TextButton.styles'
 
-export default function IconButton({
+export default function TextButton({
   buttonColor,
   buttonHeight,
   buttonRadius,
