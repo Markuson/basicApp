@@ -2,15 +2,14 @@ import React from 'react'
 import { Text, View } from 'react-native'
 
 
-import styles from './MainScreen.styles'
+import styles from './DisconnectScreen.styles'
 import GlobalStyles from '../../styles/GlobalStyles';
 
 import TextButton from '../../components/TextButton'
 
-export default function MainScreen({ idTag, status, user, wsOpen, onAuthenticate, onConnect }) {
+export default function DisconnectScreen({ connectionId, user, wsOpen, onCSDisconnect, onConnect }) {
 
     const { buttonText, container, header, textLight } = styles
-
 
 
     return (
@@ -31,8 +30,9 @@ export default function MainScreen({ idTag, status, user, wsOpen, onAuthenticate
             </View>
             {wsOpen &&
                 <View style={container}>
+
                     <TextButton
-                        title="Authenticate"
+                        title="Disconnect"
                         buttonColor={buttonText.color}
                         buttonHeight={buttonText.height}
                         buttonWidth={buttonText.width}
@@ -40,25 +40,16 @@ export default function MainScreen({ idTag, status, user, wsOpen, onAuthenticate
                         buttonFontColor={buttonText.fontColor}
                         buttonFontFamily={buttonText.fontFamily}
                         buttonFontSize={buttonText.fontSize}
-                        onPress={onAuthenticate}
+                        onPress={onCSDisconnect}
                     />
                     <Text
                         style={textLight}
                         accessible={true}
-                        testID={'data-status'}
-                        accessibilityLabel={'data-status'}
+                        testID={'data-connectionId'}
+                        accessibilityLabel={'data-connectionId'}
                     >
-                        status: {status}
+                        connection id: {connectionId}
                     </Text>
-                    <Text
-                        style={textLight}
-                        accessible={true}
-                        testID={'data-message'}
-                        accessibilityLabel={'data-message'}
-                    >
-                        idTag: {idTag}
-                    </Text>
-
                 </View>
             }
             {!wsOpen &&
@@ -72,7 +63,7 @@ export default function MainScreen({ idTag, status, user, wsOpen, onAuthenticate
                         buttonFontColor={buttonText.fontColor}
                         buttonFontFamily={buttonText.fontFamily}
                         buttonFontSize={buttonText.fontSize}
-                        onPress={() => onConnect}
+                        onPress={onConnect}
                     />
                 </View>
             }

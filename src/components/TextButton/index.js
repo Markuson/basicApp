@@ -11,6 +11,7 @@ export default function IconButton({
   buttonFontColor,
   buttonFontFamily,
   buttonFontSize,
+  disabled = false,
   onPress,
   title
 }) {
@@ -23,7 +24,7 @@ export default function IconButton({
   const { textButton, text } = styles
 
   return (
-    <TouchableOpacity onPress={() => this.handlePress()} style={[textButton, { height: buttonHeight, width: buttonWidth, borderRadius: buttonRadius, backgroundColor: buttonColor }]}>
+    <TouchableOpacity disabled={disabled} onPress={() => this.handlePress()} style={[textButton, { height: buttonHeight, width: buttonWidth, borderRadius: buttonRadius, backgroundColor: buttonColor }]}>
       <Text style={{ color: buttonFontColor, fontFamily: buttonFontFamily, fontSize: buttonFontSize }}>
         {title}
       </Text>

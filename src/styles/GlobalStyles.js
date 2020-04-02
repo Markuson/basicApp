@@ -19,7 +19,7 @@ export default {
     appContainer: {
         flex: 10,
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'space-between',
     },
 
     appFooter: {
