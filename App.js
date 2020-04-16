@@ -1,168 +1,199 @@
-import React, { Component } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { Alert, SafeAreaView, View, StatusBar } from 'react-native'
 import 'react-native-get-random-values'
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { v1 as uuidv1 } from 'uuid';
+
+
+import { Context } from './src/components/Context'
 
 import GlobalStyles from './src/styles/GlobalStyles'
 
 import MainScreen from './src/screens/MainScreen'
 import ConnectScreen from './src/screens/ConnectScreen';
 import DisconnectScreen from './src/screens/DisconnectScreen';
-import MainNavigator from './src/navigator/MainNavigator';
 
-const AppContext = React.createContext()
+const Tab = createBottomTabNavigator()
 
-export default class App extends Component {
-  constructor(props) {
-    super(props);
-    this.ws
-  }
+export default function App() {
 
-  state = {
-    data: '',
-    idTag: '',
-    authMsg: '',
-    chargePointId: '',
-    connectMsg: '',
-    connectionId: '',
-    disconnectMsg: '',
-    password: '',
-    status: '',
-    user: '',
-    wsOpen: false
-  }
+  const [chargePointId, setChargePointId] = useState('')
+  const [connectionId, setConnectionId] = useState('')
+  const [idTag, setIdTag] = useState('')
+  const [password, setPassword] = useState('')
+  const [reqMessage, setReqMessage] = useState({msgId:'', message:''})
+  const [resMessage, setResMessage] = useState('')
+  const [status, setStatus] = useState('')
+  const [user, setUser] = useState('')
+  const [wsOpen, setWsOpen] = useState(false)
 
-  componentDidMount = () => {
-    const user = 'test_user1.1@eosp.org'
-    const password = 'test_user1.1'
-    const chargePointId = 'Charge Station 1.1 - CP1'
-    this.setState({ user, password, chargePointId })
-    this.ocppConnect(user)
-  }
+  const ws = useRef(null)
 
-  ocppConnect = (user) => {
-    // this.ws = new WebSocket(`ws://155.210.139.83:9003/eosp/ws/users/${user}`);
-    this.ws = new WebSocket(`ws://192.168.1.7:8080/${encodeURIComponent(user)}`)
-    this.ws.onopen = () => {
+  useEffect(() => {
+    if (!wsOpen) {
+      const user = 'test_user1.1@eosp.org'
+      const password = 'test_user1.1'
+      const chargePointId = 'Charge Station 1.1 - CP1'
+      setUser(user)
+      setPassword(password)
+      setChargePointId(chargePointId)
+      ocppConnect(user)
+    }
+  }, [])
+
+  useEffect(() => {
+    if(reqMessage.msgId){
+      alert(reqMessage.message[3].data)
+      ocppSend(reqMessage.message)
+    }
+  }, [reqMessage])
+
+  useEffect(() => {
+    if(resMessage){
+      try {
+        ocppParse()
+      } catch (error) {
+        alert(`ERROR: ${error.message}`)
+      }
+    }
+  }, [resMessage])
+
+  const ocppConnect = (user) => {
+    ws.current = new WebSocket(`ws://155.210.139.83:9003/eosp/ws/users/${encodeURIComponent(user)}`);
+    // ws.current = new WebSocket(`ws://192.168.1.7:8080/${encodeURIComponent(user)}`)
+    ws.current.onopen = () => {
       Alert.alert('CONNECTED')
-      this.setState({ wsOpen: true })
+      setWsOpen(true)
     }
-    this.ws.onclose = () => {
+    ws.current.onclose = () => {
       Alert.alert('DISCONNECTED')
-      this.setState({ wsOpen: false })
+      setWsOpen(false)
     }
 
-    this.ws.onmessage = (e) => {
-      (async () => {
-        const response = await JSON.parse(e.data)
-        if (response[0]=== 3){
-          const [, msgId, res] = response
-          this.ocppCSResponse(msgId, res)
-        }else{
-          const [,msgId, command, res] = response
-          this.ocppCPResponse(msgId, command, res)
-        }
-      })();
+    ws.current.onmessage = (e) => {
+      alert(e.data)
+      setResMessage(e.data)
     }
   }
 
-  ocppCSResponse = async (msgId, res) => {
-    switch(msgId){
-      case this.state.authMsg:
+  const ocppParse = async () =>{
+    setReqMessage({msgId:'', message:''})
+    let response = await JSON.parse(resMessage)
+    if(response[0]==3){
+      const[,msgId,res] = response
+      if (msgId == reqMessage.msgId) ocppResponse(reqMessage.message[3].messageId, res)
+    }else{
+      const [, msgId, command, res] = response
+      ocppRequest(msgId, command, res)
+    }
+  }
+
+  const ocppResponse = async (type, res) => {
+
+    switch (type) {
+      case 'authenticate':
+        Alert.alert('authenticate')
         const { status, data } = res
-        const response = await JSON.parse(data)
-        this.setState({ status, idTag: response.id_tag })
+        if (status == 'Accepted'){
+          const response = await JSON.parse(data)
+          setStatus(status)
+          setIdTag(response.id_tag)
+        }else{
+          throw new Error(status)
+        }
         break
 
-      case this.state.connectMsg:
+      case 'connect_charge_point':
         const { connection_id } = res
-      this.setState({ connectionId: connection_id })
-      break
+        Alert.alert('connect')
+        setConnectionId(connection_id)
+        break
 
-      case this.state.disconnectMsg:
-        this.setState({ connectionId: 'CS DISCONNECTED' })
+      case 'disconnect_charge_point':
+        setConnectionId('CS DISCONNECTED')
         break
 
       default:
-        Alert.alert('oter message')
+        Alert.alert('other message')
     }
   }
 
-  ocppCPResponse = (msgId, command, res) => {
+  const ocppRequest = (msgId, command, res) => {
+    Alert.alert(command)
     const message = [
       3,
       msgId,
       res
     ]
 
-    this.ocppSend(message)
+    ocppSend(message)
   }
 
-  ocppSend = (message) => {
+  const ocppSend = (message) => {
     try {
-      this.ws.send(JSON.stringify(message))
+      ws.current.send(JSON.stringify(message))
     } catch (error) {
       Alert.alert(error.message)
     }
   }
 
 
-  handleAuthenticate = () => {
-    const msgId = uuidv1()
-    this.setState({ authMsg: msgId })
+  const handleAuthenticate = async () => {
+    const _msgId = uuidv1()
 
-    const data = {
-      user: encodeURIComponent(this.state.user),
-      password: this.state.password
-    }
+    const data = JSON.stringify({
+      user,
+      password
+    })
+
+    alert(data)
 
     const message = [
       2,
-      msgId,
+      _msgId,
       'DataTransfer',
       {
         vendorId: 'es.energyonsite',
         messageId: 'authenticate',
-        data: JSON.stringify(data)
+        data
       }
     ]
 
-    this.ocppSend(message)
+    setReqMessage({msgId: _msgId, message})
   }
 
-  handleConnect = () => {
-    const msgId = uuidv1()
-    this.setState({ connectMsg: msgId })
+  const handleConnect = () => {
+    const _msgId = uuidv1()
 
-    const data = {
-      chargePointId: encodeURIComponent(this.state.chargePointId)
-    }
+    const data = JSON.stringify({
+      charge_point_id: chargePointId
+    })
 
     const message = [
       2,
-      msgId,
+      _msgId,
       'DataTransfer',
       {
         vendorId: 'es.energyonsite',
         messageId: 'connect_charge_point',
-        data: JSON.stringify(data)
+        data
       }
     ]
 
-    this.ocppSend(message)
+    setReqMessage({msgId: _msgId, message})
   }
 
-  handleDisconnect = () => {
-    const msgId = uuidv1()
-    this.setState({ disconnectMsg: msgId })
+  const handleDisconnect = () => {
+    const _msgId = uuidv1()
 
     const data = {
-      connection_id: this.state.connectionId
+      connection_id: connectionId
     }
 
     const message = [
       2,
-      msgId,
+      _msgId,
       'DataTransfer',
       {
         vendorId: 'es.energyonsite',
@@ -171,36 +202,42 @@ export default class App extends Component {
       }
     ]
 
-    this.ocppSend(message)
+    setReqMessage({msgId: _msgId, message})
   }
 
-  render() {
-    const {
-      state:{
-        idTag,
-        chargePointId,
-        connectionId,
-        password,
-        status,
-        user,
-        wsOpen
-      },
-      handleAuthenticate,
-      handleConnect,
-      handleDisconnect
-    } = this
-    return <View style={{ flex: 1 }} accessible={true} testID={"app-root"} accessibilityLabel={"app-root"} >
+  const handleReconnect = () => {
+    ocppConnect(user)
+  }
+
+  const api = {
+    idTag,
+    chargePointId,
+    connectionId,
+    password,
+    status,
+    user,
+    wsOpen,
+    handleAuthenticate,
+    handleConnect,
+    handleDisconnect,
+    handleReconnect
+  }
+
+  return (
+    <View style={{ flex: 1 }} accessible={true} testID={"app-root"} accessibilityLabel={"app-root"} >
       <StatusBar barStyle="dark-content" />
       <SafeAreaView style={GlobalStyles.droidSafeArea} accessible={false}>
-        {/* <MainScreen idTag={idTag} status={status} user={user} wsOpen={wsOpen} onAuthenticate={handleAuthenticate} onConnect={this.ocppConnect}/> */}
-        {/* <ConnectScreen connectionId={connectionId} user={user} wsOpen={wsOpen} onCSConnect={handleConnect} onConnect={this.ocppConnect}/> */}
-        {/* <DisconnectScreen connectionId={this.state.data} user={user} wsOpen={wsOpen} onCSDisconnect={handleDisconnect} onConnect={this.ocppConnect}/> */}
-        <MainNavigator />
+        <Context.Provider value={api}>
+          <NavigationContainer >
+            <Tab.Navigator >
+              <Tab.Screen name='Main' component={MainScreen} />
+              <Tab.Screen name='Connect' component={ConnectScreen} />
+              <Tab.Screen name='Disconnect' component={DisconnectScreen} />
+            </Tab.Navigator>
+          </NavigationContainer>
+        </Context.Provider>
       </SafeAreaView>
     </View>
-
-  }
-
-
+  )
 }
 

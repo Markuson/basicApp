@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { Text, View } from 'react-native'
+import {Context} from '../../components/Context'
 
 
 import styles from './ConnectScreen.styles'
@@ -7,10 +8,11 @@ import GlobalStyles from '../../styles/GlobalStyles';
 
 import TextButton from '../../components/TextButton'
 
-export default function ConnectScreen({ connectionId, user, wsOpen, onCSConnect, onConnect }) {
+export default function ConnectScreen() {
 
     const { buttonText, container, header, textLight } = styles
 
+    const { resMsg, connectMsg, connectionId, user, wsOpen, handleConnect, handleReconnect} = useContext(Context)
 
     return (
 
@@ -40,7 +42,7 @@ export default function ConnectScreen({ connectionId, user, wsOpen, onCSConnect,
                         buttonFontColor={buttonText.fontColor}
                         buttonFontFamily={buttonText.fontFamily}
                         buttonFontSize={buttonText.fontSize}
-                        onPress={onCSConnect}
+                        onPress={() => handleConnect()}
                     />
                     <Text
                         style={textLight}
@@ -49,6 +51,22 @@ export default function ConnectScreen({ connectionId, user, wsOpen, onCSConnect,
                         accessibilityLabel={'data-connectionId'}
                     >
                         connection id: {connectionId}
+                    </Text>
+                    <Text
+                        style={textLight}
+                        accessible={true}
+                        testID={'data-msg'}
+                        accessibilityLabel={'data-msg'}
+                    >
+                        msg: {connectMsg}
+                    </Text>
+                    <Text
+                        style={textLight}
+                        accessible={true}
+                        testID={'data-msg'}
+                        accessibilityLabel={'data-msg'}
+                    >
+                        msg: {resMsg}
                     </Text>
                 </View>
             }
@@ -63,7 +81,7 @@ export default function ConnectScreen({ connectionId, user, wsOpen, onCSConnect,
                         buttonFontColor={buttonText.fontColor}
                         buttonFontFamily={buttonText.fontFamily}
                         buttonFontSize={buttonText.fontSize}
-                        onPress={onConnect}
+                        onPress={() => handleReconnect()}
                     />
                 </View>
             }

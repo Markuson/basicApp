@@ -1,17 +1,19 @@
-import React from 'react'
+import React ,{useContext} from 'react'
 import { Text, View } from 'react-native'
-
+import {Context} from '../../components/Context'
 
 import styles from './MainScreen.styles'
 import GlobalStyles from '../../styles/GlobalStyles';
 
 import TextButton from '../../components/TextButton'
 
-export default function MainScreen({ idTag, status, user, wsOpen, onAuthenticate, onConnect }) {
+export default function MainScreen() {
+
+
 
     const { buttonText, container, header, textLight } = styles
 
-
+    const {resMsg, idTag, status, user, wsOpen, handleAuthenticate, handleReconnect} = useContext(Context)
 
     return (
 
@@ -40,7 +42,7 @@ export default function MainScreen({ idTag, status, user, wsOpen, onAuthenticate
                         buttonFontColor={buttonText.fontColor}
                         buttonFontFamily={buttonText.fontFamily}
                         buttonFontSize={buttonText.fontSize}
-                        onPress={onAuthenticate}
+                        onPress={() => handleAuthenticate()}
                     />
                     <Text
                         style={textLight}
@@ -58,7 +60,6 @@ export default function MainScreen({ idTag, status, user, wsOpen, onAuthenticate
                     >
                         idTag: {idTag}
                     </Text>
-
                 </View>
             }
             {!wsOpen &&
@@ -72,7 +73,7 @@ export default function MainScreen({ idTag, status, user, wsOpen, onAuthenticate
                         buttonFontColor={buttonText.fontColor}
                         buttonFontFamily={buttonText.fontFamily}
                         buttonFontSize={buttonText.fontSize}
-                        onPress={() => onConnect}
+                        onPress={() => handleReconnect()}
                     />
                 </View>
             }
